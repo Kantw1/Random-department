@@ -26,6 +26,7 @@ app.add_middleware(
 
 class Constraints(BaseModel):
     start_location: Optional[str] = None
+    min_distance_km: Optional[float] = None
     max_distance_km: Optional[float] = None
     start_date: Optional[str] = None  # ISO date
     end_date: Optional[str] = None  # ISO date
@@ -465,11 +466,8 @@ def list_departments() -> List[DepartmentResult]:
     ]
 
 
-@app.post("/api/random-department", response_model=DepartmentResult)
-def pick_random_department(constraints: Constraints) -> DepartmentResult:
-    """
-    Pick a random French department that matches the given constraints.
-    """
+def _compute_matching_departments(constraints: Constraints) -> List[DepartmentResult]:
+    """Retourne tous les départements qui respectent les contraintes."""
     # Gestion des dates
     start_date = constraints.start_date
     end_date = constraints.end_date
@@ -478,7 +476,10 @@ def pick_random_department(constraints: Constraints) -> DepartmentResult:
         start_date, end_date = end_date, start_date
 
     origin_lat = origin_lon = None
-    if constraints.start_location and constraints.max_distance_km:
+    if constraints.start_location and (
+        constraints.max_distance_km is not None
+        or constraints.min_distance_km is not None
+    ):
         coords = geocode_location(constraints.start_location)
         if not coords:
             raise HTTPException(
@@ -487,26 +488,26 @@ def pick_random_department(constraints: Constraints) -> DepartmentResult:
             )
         origin_lat, origin_lon = coords
 
-    candidates = []
+    candidates: List[Dict[str, Any]] = []
     for d in departments.DEPARTMENTS:
         d_lat, d_lon = d["lat"], d["lon"]
 
         # Filtre sur distance
-        if (
-            origin_lat is not None
-            and origin_lon is not None
-            and constraints.max_distance_km is not None
-        ):
+        if origin_lat is not None and origin_lon is not None:
             dist = haversine_km(origin_lat, origin_lon, d_lat, d_lon)
-            if dist > constraints.max_distance_km:
+            if constraints.min_distance_km is not None and dist < constraints.min_distance_km:
+                continue
+            if constraints.max_distance_km is not None and dist > constraints.max_distance_km:
                 continue
 
         candidates.append(d)
 
     random.shuffle(candidates)
 
+    matches: List[DepartmentResult] = []
+
     for d in candidates:
-        reasons: List[str] = ["Département choisi parmi les candidats filtrés."]
+        reasons: List[str] = ["Département compatible avec les contraintes."]
         code = d["code"]
         lat = d["lat"]
         lon = d["lon"]
@@ -547,21 +548,42 @@ def pick_random_department(constraints: Constraints) -> DepartmentResult:
 
         boundary = get_department_boundary(code)
 
-        return DepartmentResult(
-            code=d["code"],
-            name=d["name"],
-            region=d["region"],
-            lat=d["lat"],
-            lon=d["lon"],
-            reasons=reasons,
-            campings=[CampingInfo(**c) for c in campings_list],
-            lotos=[LotoInfo(**l) for l in lotos_list],
-            boundary=boundary,
+        matches.append(
+            DepartmentResult(
+                code=d["code"],
+                name=d["name"],
+                region=d["region"],
+                lat=d["lat"],
+                lon=d["lon"],
+                reasons=reasons,
+                campings=[CampingInfo(**c) for c in campings_list],
+                lotos=[LotoInfo(**l) for l in lotos_list],
+                boundary=boundary,
+            )
         )
 
-    raise HTTPException(
-        status_code=404,
-        detail="Aucun département ne correspond à ces contraintes.",
-    )
+    return matches
+
+
+@app.post("/api/random-department", response_model=DepartmentResult)
+def pick_random_department(constraints: Constraints) -> DepartmentResult:
+    """
+    Pick a random French department that matches the given constraints.
+    """
+    matches = _compute_matching_departments(constraints)
+    if not matches:
+        raise HTTPException(
+            status_code=404,
+            detail="Aucun département ne correspond à ces contraintes.",
+        )
+    return random.choice(matches)
+
+
+@app.post("/api/matching-departments", response_model=List[DepartmentResult])
+def list_matching_departments(constraints: Constraints) -> List[DepartmentResult]:
+    """
+    Retourne la liste complète des départements qui respectent les contraintes.
+    """
+    return _compute_matching_departments(constraints)
 
 

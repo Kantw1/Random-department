@@ -32,6 +32,10 @@
 
             <div class="form-row inline">
               <div>
+                <label for="minDistance">Distance min (km) :</label>
+                <input id="minDistance" name="minDistance" type="number" min="0" max="1000" />
+              </div>
+              <div>
                 <label for="maxDistance">Distance max (km) :</label>
                 <input id="maxDistance" name="maxDistance" type="number" min="1" max="1000" />
               </div>
@@ -104,6 +108,11 @@
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <!-- Renseigne cette variable en production avec l'URL de ton backend, par ex. :
+         window.API_BASE_URL = "https://ton-backend.onrender.com"; -->
+    <script>
+      // window.API_BASE_URL = "https://ton-backend.onrender.com";
+    </script>
     <script src="main.js"></script>
   </body>
   </html>

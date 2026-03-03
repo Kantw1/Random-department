@@ -18,13 +18,18 @@ let boundaryLayer = null;
 
 async function callApi(payload) {
   let baseUrl;
-  if (
+  if (window.API_BASE_URL) {
+    // URL explicite définie dans index.html (production)
+    baseUrl = window.API_BASE_URL;
+  } else if (
     window.location.hostname === "localhost" ||
     window.location.hostname === "127.0.0.1" ||
     window.location.origin.startsWith("file:")
   ) {
+    // Développement local
     baseUrl = "http://127.0.0.1:8000";
   } else {
+    // Fallback : même origine que le frontend
     baseUrl = window.location.origin;
   }
 
@@ -56,6 +61,9 @@ form.addEventListener("submit", async (e) => {
 
   const payload = {
     start_location: document.getElementById("startLocation").value || null,
+    min_distance_km: document.getElementById("minDistance").value
+      ? Number(document.getElementById("minDistance").value)
+      : null,
     max_distance_km: document.getElementById("maxDistance").value
       ? Number(document.getElementById("maxDistance").value)
       : null,
