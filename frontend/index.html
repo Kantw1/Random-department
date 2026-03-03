@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Random Département</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      crossorigin=""
+    />
+  </head>
+  <body>
+    <div class="app-container">
+      <header class="app-header">
+        <h1>Tirage au sort d'un département français</h1>
+        <p>
+          Choisis un département aléatoirement en ajoutant des contraintes
+          (météo, loto, eau, camping, distance...).
+        </p>
+      </header>
+
+      <main class="app-main">
+        <section class="card">
+          <h2>Contraintes</h2>
+          <form id="constraints-form">
+            <div class="form-row">
+              <label for="startLocation">Point de départ (ville, adresse) :</label>
+              <input id="startLocation" name="startLocation" type="text" placeholder="Ex : Lyon, 69000" />
+            </div>
+
+            <div class="form-row inline">
+              <div>
+                <label for="maxDistance">Distance max (km) :</label>
+                <input id="maxDistance" name="maxDistance" type="number" min="1" max="1000" />
+              </div>
+              <div>
+                <label for="startDate">Date de début :</label>
+                <input id="startDate" name="startDate" type="date" />
+              </div>
+              <div>
+                <label for="endDate">Date de fin :</label>
+                <input id="endDate" name="endDate" type="date" />
+              </div>
+            </div>
+
+            <fieldset class="form-row check-group">
+              <legend>Options</legend>
+              <label>
+                <input type="checkbox" id="goodWeather" />
+                Météo agréable sur la période
+              </label>
+              <label>
+                <input type="checkbox" id="needLoto" />
+                Présence d'un loto `agenda-loto.net`
+              </label>
+              <label>
+                <input type="checkbox" id="needWater" />
+                Présence d'une rivière / d'un lac à proximité
+              </label>
+              <label>
+                <input type="checkbox" id="needCamping" />
+                Camping disponible dans le coin
+              </label>
+            </fieldset>
+
+            <button type="submit" class="primary-btn">
+              Tirer un département
+            </button>
+
+            <p id="status" class="status"></p>
+          </form>
+        </section>
+
+        <section id="result" class="card hidden">
+          <h2>Résultat</h2>
+          <div class="result-content">
+            <p class="dept-name">
+              <span id="dept-name"></span>
+              <span id="dept-code" class="badge"></span>
+            </p>
+            <p class="dept-region" id="dept-region"></p>
+            <ul id="reasons"></ul>
+            <div id="campings-block" class="sublist hidden">
+              <h3>Campings trouvés dans le département</h3>
+              <ul id="campings"></ul>
+            </div>
+            <div id="lotos-block" class="sublist hidden">
+              <h3>Lotos (liens externes)</h3>
+              <ul id="lotos"></ul>
+            </div>
+            <div id="map" class="map"></div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="app-footer">
+        <small>
+          Prototype – certaines contraintes (météo, loto, camping, eau) sont
+          encore en cours d'implémentation côté serveur.
+        </small>
+      </footer>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script src="main.js"></script>
+  </body>
+  </html>
+
+
