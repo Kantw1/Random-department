@@ -24,6 +24,17 @@ app.add_middleware(
 )
 
 
+@app.get("/")
+def root() -> Dict[str, str]:
+    """
+    Endpoint racine simple pour Render / tests manuels.
+    """
+    return {
+        "message": "Backend Random-department est en ligne.",
+        "docs": "/docs",
+    }
+
+
 class Constraints(BaseModel):
     start_location: Optional[str] = None
     min_distance_km: Optional[float] = None
